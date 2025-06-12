@@ -1,0 +1,35 @@
+name: Subdomain Enumeration
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'  # daily at midnight UTC
+
+jobs:
+  enumerate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+
+      - name: Install Tools
+        run: |
+          go install github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
+          go install github.com/projectdiscovery/dnsx/cmd/dnsx@latest
+          wget https://github.com/d3mondev/puredns/releases/latest/download/puredns-linux-amd64 -O puredns
+          chmod +x puredns && sudo mv puredns /usr/local/bin
+
+      - name: Run Enumeration
+        run: |
+          ./subenum.sh example.com
+
+      - name: Upload Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: subdomains
+          path: output/**
