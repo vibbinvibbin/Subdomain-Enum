@@ -1,0 +1,106 @@
+name: Deep Subdomain Enumeration
+
+on:
+  workflow_dispatch:
+    inputs:
+      domain:
+        description: 'Target domain to enumerate'
+        required: true
+        default: 'example.com'
+
+jobs:
+  subdomain-enum:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🛠️ Setup Environment
+        run: |
+          sudo apt update
+          sudo apt install -y whois curl git python3-pip jq
+          go install github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
+          go install github.com/projectdiscovery/dnsx/cmd/dnsx@latest
+          go install github.com/projectdiscovery/httpx/cmd/httpx@latest
+          go install github.com/projectdiscovery/katana/cmd/katana@latest
+          go install github.com/projectdiscovery/nuclei/v2/cmd/nuclei@latest
+          go install github.com/projectdiscovery/mapcidr/cmd/mapcidr@latest
+          go install github.com/d3mondev/puredns/v2@latest
+          go install github.com/ffuf/ffuf/v2@latest
+          pip3 install git+https://github.com/devanshbatham/FavFreak.git
+          echo "$HOME/go/bin" >> $GITHUB_PATH
+
+      - name: 📥 Create Working Directory
+        run: |
+          mkdir enum && cd enum
+          echo "${{ github.event.inputs.domain }}" > domain.txt
+
+      - name: 🔍 IP Space Discovery
+        run: |
+          domain=${{ github.event.inputs.domain }}
+          asn=$(curl -s "https://api.hackertarget.com/aslookup/?q=$domain" | grep AS | awk '{print $1}')
+          whois -h whois.radb.net -i origin $asn | grep -Eo "([0-9.]+){4}/[0-9]+" | sort -u > ip_ranges.txt
+
+      - name: 🔄 PTR Record Enumeration
+        run: |
+          mapcidr -cidr ip_ranges.txt -silent > expanded_ips.txt
+          dnsx -ptr -resp-only -l expanded_ips.txt -o ptr_records.txt
+
+      - name: 🖼️ Favicon Hashing
+        run: |
+          # You need a list of URLs first; placeholder for demo
+          echo "http://$domain" > urls.txt
+          python3 ~/go/bin/favfreak.py -l urls.txt -o favicons.txt
+
+      - name: 🌐 Related Domain Discovery (Manual Placeholder)
+        run: |
+          echo "Use external tools/APIs like WhoisXML or Bing Search manually." > related_domains.txt
+
+      - name: 🕵️ Passive Subdomain Enumeration
+        run: |
+          subfinder -d ${{ github.event.inputs.domain }} -all -o passive.txt
+
+      - name: 🧰 DNS Brute-force
+        run: |
+          wget https://raw.githubusercontent.com/danielmiessler/SecLists/master/Discovery/DNS/dns-Jhaddix.txt -O dns_wordlist.txt
+          puredns bruteforce dns_wordlist.txt ${{ github.event.inputs.domain }} -r resolvers.txt -w dns_bf.txt
+
+      - name: 🔁 Permutation Enumeration
+        run: |
+          go install github.com/ameenmaali/gotator@latest
+          gotator -sub passive.txt -perm permutations.txt -depth 1 -adv -md > permuted.txt
+          puredns resolve permuted.txt -r resolvers.txt -w resolved_perms.txt
+
+      - name: ✅ DNS Resolution & Merge
+        run: |
+          cat passive.txt dns_bf.txt resolved_perms.txt | sort -u > all_resolved.txt
+
+      - name: 🌊 HTTP Probing
+        run: |
+          httpx -l all_resolved.txt -o live_subdomains.txt
+
+      - name: 🕸️ Asset Crawling
+        run: |
+          katana -list live_subdomains.txt -o urls.txt
+
+      - name: 🔦 Vulnerability Detection
+        run: |
+          nuclei -l urls.txt -o nuclei_results.txt
+
+      - name: 🧪 Manual Review (Placeholder)
+        run: |
+          echo "Review nuclei_results.txt manually for false positives" > manual_review.txt
+
+      - name: 📦 Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: enum-results
+          path: |
+            ip_ranges.txt
+            ptr_records.txt
+            favicons.txt
+            passive.txt
+            dns_bf.txt
+            resolved_perms.txt
+            all_resolved.txt
+            live_subdomains.txt
+            urls.txt
+            nuclei_results.txt
