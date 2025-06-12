@@ -9,8 +9,7 @@ echo "[*] Passive Enumeration"
 subfinder -d "$DOMAIN" -silent -o "$OUTDIR/passive.txt"
 
 echo "[*] Active Bruteforce"
-puredns bruteforce wordlists/subdomains.txt "$DOMAIN" \
-  -r wordlists/resolvers.txt -w "$OUTDIR/active.txt"
+puredns bruteforce "$DOMAIN" wordlists/subdomains.txt -r wordlists/resolvers.txt -w "$OUTDIR/active.txt"
 
 echo "[*] Merge & Deduplicate"
 cat "$OUTDIR/passive.txt" "$OUTDIR/active.txt" | sort -u > "$OUTDIR/all.txt"
