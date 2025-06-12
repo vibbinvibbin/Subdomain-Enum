@@ -8,8 +8,8 @@ mkdir -p "$OUTDIR"
 echo "[*] Passive Enumeration"
 subfinder -d "$DOMAIN" -silent -o "$OUTDIR/passive.txt"
 
-echo "[*] Active Bruteforce"
-puredns bruteforce wordlists/subdomains.txt "$DOMAIN" -r wordlists/resolvers.txt -w "$OUTDIR/active.txt"
+#echo "[*] Active Bruteforce"
+#puredns bruteforce wordlists/subdomains.txt "$DOMAIN" -r wordlists/resolvers.txt -w "$OUTDIR/active.txt"
 
 
 echo "[*] Merge & Deduplicate"
