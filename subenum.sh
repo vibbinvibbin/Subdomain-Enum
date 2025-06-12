@@ -11,9 +11,14 @@ subfinder -d "$DOMAIN" -silent -o "$OUTDIR/passive.txt"
 #echo "[*] Active Bruteforce"
 #puredns bruteforce wordlists/subdomains.txt "$DOMAIN" -r wordlists/resolvers.txt -w "$OUTDIR/active.txt"
 
-
 echo "[*] Merge & Deduplicate"
-cat "$OUTDIR/passive.txt" "$OUTDIR/active.txt" | sort -u > "$OUTDIR/all.txt"
+
+if [ -f "$OUTDIR/active.txt" ]; then
+  cat "$OUTDIR/passive.txt" "$OUTDIR/active.txt" | sort -u > "$OUTDIR/all.txt"
+else
+  echo "[!] Skipping active results — only passive found"
+  cp "$OUTDIR/passive.txt" "$OUTDIR/all.txt"
+fi
 
 echo "[*] DNS Validation with dnsx"
 dnsx -silent -l "$OUTDIR/all.txt" -r wordlists/resolvers.txt -o "$OUTDIR/resolved.txt"
