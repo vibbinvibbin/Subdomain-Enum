@@ -2,12 +2,16 @@ name: Subdomain Enumeration
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '0 0 * * *'  # daily at midnight UTC
+    inputs:
+      domain:
+        description: 'Target domain (e.g., example.com)'
+        required: true
+        default: 'example.com'
 
 jobs:
   enumerate:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -24,12 +28,18 @@ jobs:
           wget https://github.com/d3mondev/puredns/releases/latest/download/puredns-linux-amd64 -O puredns
           chmod +x puredns && sudo mv puredns /usr/local/bin
 
+      - name: Download Public Resolvers
+        run: |
+          mkdir -p wordlists
+          curl -sSL https://raw.githubusercontent.com/projectdiscovery/public-resolvers/main/resolvers.txt -o wordlists/resolvers.txt
+
       - name: Run Enumeration
         run: |
-          ./subenum.sh example.com
+          chmod +x subenum.sh
+          ./subenum.sh ${{ github.event.inputs.domain }}
 
       - name: Upload Results
         uses: actions/upload-artifact@v4
         with:
-          name: subdomains
-          path: output/**
+          name: subdomain-results
+          path: output/${{ github.event.inputs.domain }}
