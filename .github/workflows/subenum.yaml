@@ -25,8 +25,7 @@ jobs:
         run: |
           go install github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
           go install github.com/projectdiscovery/dnsx/cmd/dnsx@latest
-          wget https://github.com/d3mondev/puredns/releases/latest/download/puredns-linux-amd64 -O puredns
-          chmod +x puredns && sudo mv puredns /usr/local/bin
+          go install github.com/d3mondev/puredns/v2@latest
 
       - name: Download Public Resolvers
         run: |
