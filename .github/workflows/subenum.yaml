@@ -28,14 +28,14 @@ jobs:
           sudo apt-get install -y git build-essential
           go install github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
           go install github.com/projectdiscovery/dnsx/cmd/dnsx@latest
-          go install github.com/d3mondev/puredns/v2@latest
           git clone https://github.com/blechschmidt/massdns.git
           cd massdns && make && sudo cp bin/massdns /usr/local/bin && cd ..
+        # go install github.com/d3mondev/puredns/v2@latest
 
-      - name: Download Public Resolvers
-        run: |
-          mkdir -p wordlists
-          curl -sSL https://raw.githubusercontent.com/projectdiscovery/public-resolvers/main/resolvers.txt -o wordlists/resolvers.txt
+      # - name: Download Public Resolvers
+      #   run: |
+      #     mkdir -p wordlists
+      #     curl -sSL https://raw.githubusercontent.com/projectdiscovery/public-resolvers/main/resolvers.txt -o wordlists/resolvers.txt
 
       - name: Run Enumeration
         run: |
