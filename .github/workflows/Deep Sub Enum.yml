@@ -13,10 +13,42 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: ⬇️ Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: ⚡ Cache Go Tools and Modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+            ~/go/bin
+          key: ${{ runner.os }}-go-${{ hashFiles('**/*.go') }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: ⚡ Cache Wordlists
+        uses: actions/cache@v4
+        with:
+          path: ./wordlists/
+          key: ${{ runner.os }}-wordlists-v1
+
+      - name: ⚡ Cache Nuclei Templates
+        uses: actions/cache@v4
+        with:
+          path: ~/.local/nuclei-templates
+          key: ${{ runner.os }}-nuclei-templates-${{ hashFiles('**/.nuclei-template-version') }}
+          restore-keys: |
+            ${{ runner.os }}-nuclei-templates-
+
       - name: 🛠️ Setup Environment
         run: |
           sudo apt update
           sudo apt install -y whois curl git python3-pip jq
+          mkdir -p ./wordlists
+          if [ ! -f ./wordlists/dns-Jhaddix.txt ]; then
+            wget https://raw.githubusercontent.com/danielmiessler/SecLists/master/Discovery/DNS/dns-Jhaddix.txt -O ./wordlists/dns-Jhaddix.txt
+          fi
           go install github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
           go install github.com/projectdiscovery/dnsx/cmd/dnsx@latest
           go install github.com/projectdiscovery/httpx/cmd/httpx@latest
@@ -25,10 +57,19 @@ jobs:
           go install github.com/projectdiscovery/mapcidr/cmd/mapcidr@latest
           go install github.com/d3mondev/puredns/v2@latest
           go install github.com/ffuf/ffuf/v2@latest
+          go install github.com/ameenmaali/gotator@latest
           pip3 install git+https://github.com/devanshbatham/FavFreak.git
-          echo "$HOME/go/bin" >> $GITHUB_PATH
 
-      - name: 📥 Create Working Directory
+      - name: 🛠️ Add Go Bin to PATH
+        run: echo "$HOME/go/bin" >> $GITHUB_PATH
+
+      - name: 📥 Install/Update Nuclei Templates (if needed)
+        run: |
+          if [ ! -d ~/.local/nuclei-templates ]; then
+            nuclei -update-templates
+          fi
+
+      - name: 📁 Create Working Directory
         run: |
           mkdir enum && cd enum
           echo "${{ github.event.inputs.domain }}" > domain.txt
@@ -46,13 +87,11 @@ jobs:
 
       - name: 🖼️ Favicon Hashing
         run: |
-          # You need a list of URLs first; placeholder for demo
-          echo "http://$domain" > urls.txt
+          echo "http://${{ github.event.inputs.domain }}" > urls.txt
           python3 ~/go/bin/favfreak.py -l urls.txt -o favicons.txt
 
       - name: 🌐 Related Domain Discovery (Manual Placeholder)
-        run: |
-          echo "Use external tools/APIs like WhoisXML or Bing Search manually." > related_domains.txt
+        run: echo "Manual/External discovery suggested" > related_domains.txt
 
       - name: 🕵️ Passive Subdomain Enumeration
         run: |
@@ -60,14 +99,12 @@ jobs:
 
       - name: 🧰 DNS Brute-force
         run: |
-          wget https://raw.githubusercontent.com/danielmiessler/SecLists/master/Discovery/DNS/dns-Jhaddix.txt -O dns_wordlist.txt
-          puredns bruteforce dns_wordlist.txt ${{ github.event.inputs.domain }} -r resolvers.txt -w dns_bf.txt
+          puredns bruteforce ./wordlists/dns-Jhaddix.txt ${{ github.event.inputs.domain }} -r resolvers.txt -w dns_bf.txt || true
 
       - name: 🔁 Permutation Enumeration
         run: |
-          go install github.com/ameenmaali/gotator@latest
-          gotator -sub passive.txt -perm permutations.txt -depth 1 -adv -md > permuted.txt
-          puredns resolve permuted.txt -r resolvers.txt -w resolved_perms.txt
+          gotator -sub passive.txt -perm ./wordlists/dns-Jhaddix.txt -depth 1 -adv -md > permuted.txt
+          puredns resolve permuted.txt -r resolvers.txt -w resolved_perms.txt || true
 
       - name: ✅ DNS Resolution & Merge
         run: |
@@ -83,13 +120,12 @@ jobs:
 
       - name: 🔦 Vulnerability Detection
         run: |
-          nuclei -l urls.txt -o nuclei_results.txt
+          nuclei -l urls.txt -t ~/.local/nuclei-templates -o nuclei_results.txt
 
       - name: 🧪 Manual Review (Placeholder)
-        run: |
-          echo "Review nuclei_results.txt manually for false positives" > manual_review.txt
+        run: echo "Review nuclei_results.txt manually" > manual_review.txt
 
-      - name: 📦 Upload Artifact
+      - name: 📦 Upload Enumeration Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: enum-results
