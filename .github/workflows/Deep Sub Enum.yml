@@ -62,9 +62,9 @@ jobs:
           go install github.com/projectdiscovery/mapcidr/cmd/mapcidr@latest
           go install github.com/d3mondev/puredns/v2@latest
           go install github.com/ffuf/ffuf/v2@latest
-          go install github.com/ameenmaali/gotator@latest
           git clone https://github.com/devanshbatham/FavFreak.git ~/FavFreak
           chmod +x ~/FavFreak/favfreak.py
+       #go install github.com/ameenmaali/gotator@latest
 
       - name: 🛠️ Add Go Bin to PATH
         run: echo "$HOME/go/bin" >> $GITHUB_PATH
@@ -107,10 +107,10 @@ jobs:
         run: |
           puredns bruteforce ./wordlists/dns-Jhaddix.txt ${{ github.event.inputs.domain }} -r resolvers.txt -w dns_bf.txt || true
 
-      - name: 🔁 Permutation Enumeration
-        run: |
-          gotator -sub passive.txt -perm ./wordlists/dns-Jhaddix.txt -depth 1 -adv -md > permuted.txt
-          puredns resolve permuted.txt -r resolvers.txt -w resolved_perms.txt || true
+      # - name: 🔁 Permutation Enumeration
+      #   run: |
+      #     gotator -sub passive.txt -perm ./wordlists/dns-Jhaddix.txt -depth 1 -adv -md > permuted.txt
+      #     puredns resolve permuted.txt -r resolvers.txt -w resolved_perms.txt || true
 
       - name: ✅ DNS Resolution & Merge
         run: |
@@ -141,8 +141,8 @@ jobs:
             favicons.txt
             passive.txt
             dns_bf.txt
-            resolved_perms.txt
             all_resolved.txt
             live_subdomains.txt
             urls.txt
             nuclei_results.txt
+          #resolved_perms.txt
