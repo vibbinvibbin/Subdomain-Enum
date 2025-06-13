@@ -43,8 +43,8 @@ jobs:
 
       - name: 🔐 Configure Git Authentication
         run: |
-          git config --global url."https://${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
-
+           git config --global url."https://${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
+           go env -w GOPRIVATE=github.com/*
 
       - name: 🛠️ Setup Environment
         run: |
