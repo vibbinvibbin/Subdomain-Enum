@@ -41,6 +41,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nuclei-templates-
 
+      - name: 🔐 Configure Git Authentication
+        run: |
+          git config --global url."https://${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
+
+
       - name: 🛠️ Setup Environment
         run: |
           sudo apt update
