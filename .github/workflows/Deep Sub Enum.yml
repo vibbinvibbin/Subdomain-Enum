@@ -11,6 +11,8 @@ on:
 jobs:
   subdomain-enum:
     runs-on: ubuntu-latest
+    container:
+      image: friedablessy/subdomain-enum:latest
 
     steps:
       - name: ⬇️ Checkout Repository
@@ -41,33 +43,33 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nuclei-templates-
 
-      - name: 🔐 Configure Git Authentication
-        run: |
-           git config --global url."https://${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
-           go env -w GOPRIVATE=github.com/*
+      # - name: 🔐 Configure Git Authentication
+      #   run: |
+      #      git config --global url."https://${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
+      #      go env -w GOPRIVATE=github.com/*
 
-      - name: 🛠️ Setup Environment
-        run: |
-          sudo apt update
-          sudo apt install -y whois curl git python3-pip jq
-          mkdir -p ./wordlists
-          if [ ! -f ./wordlists/dns-Jhaddix.txt ]; then
-            wget https://raw.githubusercontent.com/danielmiessler/SecLists/master/Discovery/DNS/dns-Jhaddix.txt -O ./wordlists/dns-Jhaddix.txt
-          fi
-          go install github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
-          go install github.com/projectdiscovery/dnsx/cmd/dnsx@latest
-          go install github.com/projectdiscovery/httpx/cmd/httpx@latest
-          go install github.com/projectdiscovery/katana/cmd/katana@latest
-          go install github.com/projectdiscovery/nuclei/v2/cmd/nuclei@latest
-          go install github.com/projectdiscovery/mapcidr/cmd/mapcidr@latest
-          go install github.com/d3mondev/puredns/v2@latest
-          go install github.com/ffuf/ffuf/v2@latest
-          git clone https://github.com/devanshbatham/FavFreak.git ~/FavFreak
-          chmod +x ~/FavFreak/favfreak.py
-       #go install github.com/ameenmaali/gotator@latest
+      # - name: 🛠️ Setup Environment
+      #   run: |
+      #     sudo apt update
+      #     sudo apt install -y whois curl git python3-pip jq
+      #     mkdir -p ./wordlists
+      #     if [ ! -f ./wordlists/dns-Jhaddix.txt ]; then
+      #       wget https://raw.githubusercontent.com/danielmiessler/SecLists/master/Discovery/DNS/dns-Jhaddix.txt -O ./wordlists/dns-Jhaddix.txt
+      #     fi
+      #     go install github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
+      #     go install github.com/projectdiscovery/dnsx/cmd/dnsx@latest
+      #     go install github.com/projectdiscovery/httpx/cmd/httpx@latest
+      #     go install github.com/projectdiscovery/katana/cmd/katana@latest
+      #     go install github.com/projectdiscovery/nuclei/v2/cmd/nuclei@latest
+      #     go install github.com/projectdiscovery/mapcidr/cmd/mapcidr@latest
+      #     go install github.com/d3mondev/puredns/v2@latest
+      #     go install github.com/ffuf/ffuf/v2@latest
+      #     git clone https://github.com/devanshbatham/FavFreak.git ~/FavFreak
+      #     chmod +x ~/FavFreak/favfreak.py
+      #  #go install github.com/ameenmaali/gotator@latest
 
-      - name: 🛠️ Add Go Bin to PATH
-        run: echo "$HOME/go/bin" >> $GITHUB_PATH
+      # - name: 🛠️ Add Go Bin to PATH
+      #   run: echo "$HOME/go/bin" >> $GITHUB_PATH
 
       - name: 📥 Install/Update Nuclei Templates (if needed)
         run: |
