@@ -81,29 +81,35 @@ jobs:
           echo "${{ github.event.inputs.domain }}" > domain.txt
 
       - name: 🔍 IP Space Discovery
+        continue-on-error: true
         run: |
           domain=${{ github.event.inputs.domain }}
           asn=$(curl -s "https://api.hackertarget.com/aslookup/?q=$domain" | grep AS | awk '{print $1}')
           whois -h whois.radb.net -i origin $asn | grep -Eo "([0-9.]+){4}/[0-9]+" | sort -u > ip_ranges.txt
 
       - name: 🔄 PTR Record Enumeration
+        continue-on-error: true
         run: |
           mapcidr -cidr ip_ranges.txt -silent > expanded_ips.txt
           dnsx -ptr -resp-only -l expanded_ips.txt -o ptr_records.txt
 
       - name: 🖼️ Favicon Hashing
+        continue-on-error: true
         run: |
           echo "http://${{ github.event.inputs.domain }}" > urls.txt
           python3 ~/FavFreak/favfreak.py -l urls.txt -o favicons.txt
 
       - name: 🌐 Related Domain Discovery (Manual Placeholder)
+        continue-on-error: true
         run: echo "Manual/External discovery suggested" > related_domains.txt
 
       - name: 🕵️ Passive Subdomain Enumeration
+        continue-on-error: true
         run: |
           subfinder -d ${{ github.event.inputs.domain }} -all -o passive.txt
 
       - name: 🧰 DNS Brute-force
+        continue-on-error: true
         run: |
           puredns bruteforce ./wordlists/dns-Jhaddix.txt ${{ github.event.inputs.domain }} -r resolvers.txt -w dns_bf.txt || true
 
@@ -113,22 +119,27 @@ jobs:
       #     puredns resolve permuted.txt -r resolvers.txt -w resolved_perms.txt || true
 
       - name: ✅ DNS Resolution & Merge
+        continue-on-error: true
         run: |
           cat passive.txt dns_bf.txt resolved_perms.txt | sort -u > all_resolved.txt
 
       - name: 🌊 HTTP Probing
+        continue-on-error: true
         run: |
           httpx -l all_resolved.txt -o live_subdomains.txt
 
       - name: 🕸️ Asset Crawling
+        continue-on-error: true
         run: |
           katana -list live_subdomains.txt -o urls.txt
 
       - name: 🔦 Vulnerability Detection
+        continue-on-error: true
         run: |
           nuclei -l urls.txt -t ~/.local/nuclei-templates -o nuclei_results.txt
 
       - name: 🧪 Manual Review (Placeholder)
+        continue-on-error: true
         run: echo "Review nuclei_results.txt manually" > manual_review.txt
 
       - name: 📦 Upload Enumeration Artifacts
