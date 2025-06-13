@@ -94,7 +94,7 @@ jobs:
       - name: 🖼️ Favicon Hashing
         run: |
           echo "http://${{ github.event.inputs.domain }}" > urls.txt
-          python3 ~/go/bin/favfreak.py -l urls.txt -o favicons.txt
+          python3 ~/FavFreak/favfreak.py -l urls.txt -o favicons.txt
 
       - name: 🌐 Related Domain Discovery (Manual Placeholder)
         run: echo "Manual/External discovery suggested" > related_domains.txt
