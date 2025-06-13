@@ -58,7 +58,8 @@ jobs:
           go install github.com/d3mondev/puredns/v2@latest
           go install github.com/ffuf/ffuf/v2@latest
           go install github.com/ameenmaali/gotator@latest
-          pip3 install git+https://github.com/devanshbatham/FavFreak.git
+          git clone https://github.com/devanshbatham/FavFreak.git ~/FavFreak
+          chmod +x ~/FavFreak/favfreak.py
 
       - name: 🛠️ Add Go Bin to PATH
         run: echo "$HOME/go/bin" >> $GITHUB_PATH
