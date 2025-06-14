@@ -17,7 +17,7 @@ jobs:
     steps:
       - name: ⬇️ Checkout Repository
         uses: actions/checkout@v4
-  
+
       - name: 🛠️ Install git
         run: |
           apt-get update
@@ -39,48 +39,6 @@ jobs:
         with:
           path: ./wordlists/
           key: ${{ runner.os }}-wordlists-v1
-
-      - name: ⚡ Cache Nuclei Templates
-        uses: actions/cache@v4
-        with:
-          path: ~/.local/nuclei-templates
-          key: ${{ runner.os }}-nuclei-templates-${{ hashFiles('**/.nuclei-template-version') }}
-          restore-keys: |
-            ${{ runner.os }}-nuclei-templates-
-
-      # - name: 🔐 Configure Git Authentication
-      #   run: |
-      #      git config --global url."https://${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
-      #      go env -w GOPRIVATE=github.com/*
-
-      # - name: 🛠️ Setup Environment
-      #   run: |
-      #     sudo apt update
-      #     sudo apt install -y whois curl git python3-pip jq
-      #     mkdir -p ./wordlists
-      #     if [ ! -f ./wordlists/dns-Jhaddix.txt ]; then
-      #       wget https://raw.githubusercontent.com/danielmiessler/SecLists/master/Discovery/DNS/dns-Jhaddix.txt -O ./wordlists/dns-Jhaddix.txt
-      #     fi
-      #     go install github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
-      #     go install github.com/projectdiscovery/dnsx/cmd/dnsx@latest
-      #     go install github.com/projectdiscovery/httpx/cmd/httpx@latest
-      #     go install github.com/projectdiscovery/katana/cmd/katana@latest
-      #     go install github.com/projectdiscovery/nuclei/v2/cmd/nuclei@latest
-      #     go install github.com/projectdiscovery/mapcidr/cmd/mapcidr@latest
-      #     go install github.com/d3mondev/puredns/v2@latest
-      #     go install github.com/ffuf/ffuf/v2@latest
-      #     git clone https://github.com/devanshbatham/FavFreak.git ~/FavFreak
-      #     chmod +x ~/FavFreak/favfreak.py
-      #  #go install github.com/ameenmaali/gotator@latest
-
-      # - name: 🛠️ Add Go Bin to PATH
-      #   run: echo "$HOME/go/bin" >> $GITHUB_PATH
-
-      - name: 📥 Install/Update Nuclei Templates (if needed)
-        run: |
-          if [ ! -d ~/.local/nuclei-templates ]; then
-            nuclei -update-templates
-          fi
 
       - name: 📁 Create Working Directory
         run: |
@@ -128,7 +86,7 @@ jobs:
       - name: ✅ DNS Resolution & Merge
         continue-on-error: true
         run: |
-          cat passive.txt dns_bf.txt resolved_perms.txt | sort -u > all_resolved.txt
+          cat passive.txt dns_bf.txt | sort -u > all_resolved.txt
 
       - name: 🌊 HTTP Probing
         continue-on-error: true
@@ -140,23 +98,19 @@ jobs:
         run: |
           katana -list live_subdomains.txt -o urls.txt
 
-      - name: 📥 Ensure Nuclei Templates Exist
-        run: |
-          export HOME=${HOME:-/github/home}
-          export NUCLEI_TEMPLATE_PATH="${HOME}/.local/nuclei-templates"
-          if [ ! -d "$NUCLEI_TEMPLATE_PATH" ]; then
-            git clone https://github.com/projectdiscovery/nuclei-templates "$NUCLEI_TEMPLATE_PATH"
-          fi
-          echo "NUCLEI_TEMPLATE_PATH=$NUCLEI_TEMPLATE_PATH" >> $GITHUB_ENV
+      # - name: 🔦 Vulnerability Detection (Nuclei)
+      #   continue-on-error: true
+      #   run: |
+      #     export HOME=${HOME:-/github/home}
+      #     export NUCLEI_TEMPLATE_PATH="${HOME}/.local/nuclei-templates"
+      #     if [ ! -d "$NUCLEI_TEMPLATE_PATH" ]; then
+      #       git clone https://github.com/projectdiscovery/nuclei-templates "$NUCLEI_TEMPLATE_PATH"
+      #     fi
+      #     nuclei -l urls.txt -t "$NUCLEI_TEMPLATE_PATH" -o nuclei_results.txt
 
-      - name: 🔦 Vulnerability Detection
-        continue-on-error: true
-        run: |
-          nuclei -l urls.txt -t "$NUCLEI_TEMPLATE_PATH" -o nuclei_results.txt
-          
       - name: 🧪 Manual Review (Placeholder)
         continue-on-error: true
-        run: echo "Review nuclei_results.txt manually" > manual_review.txt
+        run: echo "Review results manually (nuclei is skipped)" > manual_review.txt
 
       - name: 📦 Upload Enumeration Artifacts
         uses: actions/upload-artifact@v4
@@ -171,5 +125,3 @@ jobs:
             all_resolved.txt
             live_subdomains.txt
             urls.txt
-            nuclei_results.txt
-          #resolved_perms.txt
