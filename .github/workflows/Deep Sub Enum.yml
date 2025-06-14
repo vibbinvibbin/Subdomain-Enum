@@ -17,11 +17,11 @@ jobs:
     steps:
       - name: ⬇️ Checkout Repository
         uses: actions/checkout@v4
-
+      
       - name: 🛠️ Update GLIBC
         run: |
           apt update
-          apt install -y wget build-essential manpages-dev
+          apt install -y wget build-essential manpages-dev gawk bison
           wget http://ftp.gnu.org/gnu/libc/glibc-2.34.tar.gz
           tar -xvzf glibc-2.34.tar.gz
           cd glibc-2.34
