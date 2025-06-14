@@ -148,8 +148,7 @@ jobs:
         continue-on-error: true
         run: |
           nuclei -l urls.txt -t "$NUCLEI_TEMPLATE_PATH" -o nuclei_results.txt
-+
-
+          
       - name: 🧪 Manual Review (Placeholder)
         continue-on-error: true
         run: echo "Review nuclei_results.txt manually" > manual_review.txt
