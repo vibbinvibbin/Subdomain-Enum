@@ -20,8 +20,8 @@ jobs:
 
       - name: 🛠️ Update GLIBC
         run: |
-          sudo apt update
-          sudo apt install -y build-essential manpages-dev
+          apt update
+          apt install -y build-essential manpages-dev
           wget http://ftp.gnu.org/gnu/libc/glibc-2.34.tar.gz
           tar -xvzf glibc-2.34.tar.gz
           cd glibc-2.34
@@ -29,7 +29,7 @@ jobs:
           cd build
           ../configure --prefix=/usr
           make -j$(nproc)
-          sudo make install
+          make install
 
       - name: ⚡ Cache Go Tools and Modules
         uses: actions/cache@v4
